@@ -3,6 +3,8 @@ import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:crud_firebase_flutter/database/firebase/firestore.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 
@@ -24,16 +26,25 @@ class _NotesState extends State<Notes> {
 
   @override
   Widget build(BuildContext context) {
+    final user = FirebaseAuth.instance.currentUser;
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.secondary,
-        foregroundColor: Theme.of(context).colorScheme.primary,
+        actions: [
+          TextButton.icon(
+              onPressed: () {
+                setState(() {
+                  FirebaseAuth.instance.signOut();
+                });
+              },
+              icon: const Icon(Icons.logout),
+              label: const Text("Logout"))
+        ],
         title: const Text("Notes"),
       ),
       body: (ListView(children: [
         Center(
           child: Text(
-            "Notes",
+            "Notes ${user!.email}",
             style: TextStyle(
                 color: Theme.of(context).colorScheme.primary,
                 fontSize: 30,
@@ -44,8 +55,8 @@ class _NotesState extends State<Notes> {
         if (pickerfile != null) Text(pickerfile!.name),
         if (pickerfile != null) Image.file(File(pickerfile!.path!)),
         const Hspace(),
-        ElevatedButton(onPressed: selectfile, child: Text("select file")),
-        ElevatedButton(onPressed: uploadFile, child: Text("upload")),
+        ElevatedButton(onPressed: selectfile, child: const Text("select file")),
+        ElevatedButton(onPressed: uploadFile, child: const Text("upload")),
         const Hspace(),
         const CustomForm(),
       ])),
@@ -85,8 +96,7 @@ class _CustomFormState extends State<CustomForm> {
       padding: const EdgeInsets.all(8.0),
       child: (Form(
           key: formkey,
-          child: ListView(
-            shrinkWrap: true,
+          child: Column(
             children: [
               UnconstrainedBox(
                 alignment: Alignment.topLeft,
@@ -129,9 +139,6 @@ class _CustomFormState extends State<CustomForm> {
                     child: const Text("Submit")),
                 const Wspace(),
                 ElevatedButton(
-                    // style: ButtonStyle(
-                    // backgroundColor:
-                    // Theme.of(context).colorScheme.secondary),
                     onPressed: () {
                       setState(() {
                         _notesController.clear();
@@ -140,7 +147,6 @@ class _CustomFormState extends State<CustomForm> {
                     child: const Text("Clear")),
               ]),
               const Hspace(),
-              Text("${firestoreService.getNotes1()}"),
               StreamBuilder<QuerySnapshot>(
                 stream: firestoreService.getNotes(),
                 builder: (context, snapshot) {
@@ -149,40 +155,43 @@ class _CustomFormState extends State<CustomForm> {
                   } else {
                     // if (snapshot.hasData) {
                     List data = snapshot.data!.docs;
-                    return GridView.builder(
-                      shrinkWrap: true,
-                      itemCount: data.length,
-                      gridDelegate:
-                          const SliverGridDelegateWithFixedCrossAxisCount(
-                              childAspectRatio: 4 / 2.5, crossAxisCount: 2),
-                      itemBuilder: (context, index) {
-                        DocumentSnapshot document = data[index];
-                        String docId = document.id;
-                        dynamic dataa = document.data();
-                        String? notes = dataa['notes'];
-                        // String? texts = dataa['text'];
+                    return SizedBox(
+                      height: 250,
+                      child: GridView.builder(
+                        shrinkWrap: true,
+                        itemCount: data.length,
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
+                                childAspectRatio: 4 / 2.5, crossAxisCount: 2),
+                        itemBuilder: (context, index) {
+                          DocumentSnapshot document = data[index];
+                          String docId = document.id;
+                          dynamic dataa = document.data();
+                          String? notes = dataa['notes'];
+                          // String? texts = dataa['text'];
 
-                        return Card(
-                          child: Center(
-                            child: GridTile(
-                              header: Container(
-                                  alignment: Alignment.topRight,
-                                  child: IconButton(
-                                      onPressed: () => openDialogBox(docId),
-                                      icon: const Icon(Icons.delete))),
-                              footer: Container(
-                                  alignment: Alignment.bottomRight,
-                                  child: IconButton(
-                                    onPressed: () {},
-                                    icon: const Icon(Icons.edit),
-                                  )),
-                              child: Center(
-                                child: Text(notes ?? ""),
+                          return Card(
+                            child: Center(
+                              child: GridTile(
+                                header: Container(
+                                    alignment: Alignment.topRight,
+                                    child: IconButton(
+                                        onPressed: () => openDialogBox(docId),
+                                        icon: const Icon(Icons.delete))),
+                                footer: Container(
+                                    alignment: Alignment.bottomRight,
+                                    child: IconButton(
+                                      onPressed: () {},
+                                      icon: const Icon(Icons.edit),
+                                    )),
+                                child: Center(
+                                  child: Text(notes ?? ""),
+                                ),
                               ),
                             ),
-                          ),
-                        );
-                      },
+                          );
+                        },
+                      ),
                     );
                     // }
                   }

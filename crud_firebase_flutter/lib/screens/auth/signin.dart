@@ -1,3 +1,4 @@
+import 'package:crud_firebase_flutter/database/auth/auth.dart';
 import 'package:crud_firebase_flutter/screens/auth/signup.dart';
 import 'package:crud_firebase_flutter/screens/notes.dart';
 import 'package:flutter/material.dart';
@@ -41,6 +42,7 @@ class CustomForm extends StatefulWidget {
 }
 
 class _CustomFormState extends State<CustomForm> {
+  final authService = AuthService();
   final _formkey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -77,9 +79,18 @@ class _CustomFormState extends State<CustomForm> {
                         _email = _emailController.text;
                         _password = _passwordController.text;
                       });
+                      showDialog(
+                          context: context,
+                          builder: (context) {
+                            return const Center(
+                              child: CircularProgressIndicator(),
+                            );
+                          });
+                      authService.signIn(email: _email, password: _password);
+                      
                     }
                   },
-                  child: const Text("submit")),
+                  child: const Text("Sign In")),
               const Hspace(),
               TextButton(
                   onPressed: () {

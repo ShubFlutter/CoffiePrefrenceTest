@@ -9,7 +9,7 @@ class FirestoreService {
   }
 
   Stream<QuerySnapshot> getNotes() {
-    final notestream = note.where("notes", isEqualTo: "shubham").snapshots();
+    final notestream = note.orderBy("timespamt", descending: true).snapshots();
     return notestream;
   }
 
